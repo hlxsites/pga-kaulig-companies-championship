@@ -3,7 +3,7 @@
 /* header and nav layout */
 header {
   --nav-color: var(--color-blue);
-  --nav-secondary-color: var(--color-blue-darker);
+  --nav-secondary-color: var(--color-blue-light);
   --nav-hover-color: var(--color-blue-dark);
   --nav-border-color: var(--color-blue-light);
   --nav-text-color: var(--color-white);

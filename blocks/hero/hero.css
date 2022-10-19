@@ -8,7 +8,7 @@ main .hero-wrapper {
 }
 
 main .hero {
-  --hero-btn-primary-color: var(--color-tan-95);
+  --hero-btn-primary-color: var(--color-gray-95);
   --hero-btn-secondary-color: var(--color-blue-95);
   --hero-btn-secondary-hover-color: var(--color-white);
 
