@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+sitemap: https://www.theplayers.com/sitemap.xml

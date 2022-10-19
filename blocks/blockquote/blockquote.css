@@ -1,3 +1,7 @@
+main .blockquote {
+  --blockquote-text-color: var(--color-blue);
+}
+
 main .blockquote blockquote {
   margin-left: 0;
   margin-right: 0;
@@ -6,7 +10,7 @@ main .blockquote blockquote {
 
 main .blockquote blockquote q {
   quotes: "“" "”" "‘" "’" ;
-  color: var(--color-blue);
+  color: var(--blockquote-text-color);
 }
 
 @media (min-width: 700px) {

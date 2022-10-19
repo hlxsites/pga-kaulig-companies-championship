@@ -1,5 +1,7 @@
 /* wrapper setup */
 main .section.player-feature-container {
+  --player-feature-status-color: var(--color-tan);
+
   margin-bottom: 0;
   padding: 0;
 }
@@ -71,7 +73,7 @@ main .player-feature {
 /* status */
 main .player-feature .player-feature-status {
   margin-bottom: 0;
-  color: var(--color-tan);
+  color: var(--player-feature-status-color);
   font-weight: bold;
   text-transform: uppercase;
 }

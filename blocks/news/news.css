@@ -1,4 +1,8 @@
 main .news-container {
+  --news-button-hover-color: var(--color-blue);
+  --news-button-unselected-color: var(--color-gray);
+  --news-button-unselected-hover-color: var(--color-gray-light);
+
   padding: 0;
 }
 
@@ -124,14 +128,14 @@ main .news-item-play::before {
 /* filters and pagination */
 main .news .news-filters,
 main .news .news-pagination {
-  margin: 0 16px;
+  margin: 16px;
   text-align: center;
 }
 
 @media (min-width: 700px) {
   main .news .news-filters,
   main .news .news-pagination {
-    margin: 0;
+    margin: 32px;
   }
 }
 
@@ -150,15 +154,15 @@ main .news .news-pagination button {
 
 main .news .news-filters button:hover,
 main .news .news-pagination button:hover {
-  background-color: var(--color-blue);
+  background-color: var(--news-button-hover-color);
 }
 
 main .news .news-filters button[aria-selected=false] {
-  background-color: var(--color-gray);
+  background-color: var(--news-button-unselected-color);
 }
 
 main .news .news-filters button[aria-selected=false]:hover {
-  background-color: var(--color-gray-light);
+  background-color: var(--news-button-unselected-hover-color);
 }
 
 main .news .news-item.news-filtered {

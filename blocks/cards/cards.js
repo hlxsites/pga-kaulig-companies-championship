@@ -1,7 +1,7 @@
 import { createOptimizedPicture, readBlockConfig, lookupPages } from '../../scripts/scripts.js';
 
-function decorateChampionCards(champions, block) {
-  block.classList.add('cards-champions');
+function decorateChampionCardsFeed(champions, block) {
+  block.classList.add('two-cols');
   // eslint-disable-next-line no-param-reassign
   champions = champions.sort((a, b) => {
     const aYear = parseInt(a.title.split(' ').pop(), 10);
@@ -15,7 +15,7 @@ function decorateChampionCards(champions, block) {
     card.innerHTML = `<div>
         <a href="${champion.path}">${createOptimizedPicture(champion.image).outerHTML}</a>
       </div>
-      <div>${year ? `<p class="cards-card-bubble">${year}</p>` : ''}<h3><a href="${champion.path}">${name}</a></h3></div>`;
+      <div>${year ? `<p class="cards-card-bubble-wrapper"><u class="cards-card-bubble">${year}</u></p>` : ''}<h3><a href="${champion.path}">${name}</a></h3></div>`;
     block.append(card);
   });
 }
@@ -28,9 +28,10 @@ export default async function decorate(block) {
     const items = pages.filter((e) => e.path.startsWith(config.source));
     if (items) {
       const type = config.type.toLowerCase();
-      if (type === 'champions') decorateChampionCards(items, block);
+      if (type === 'champions') decorateChampionCardsFeed(items, block);
     }
   }
+
   /* change to ul, li */
   const ul = document.createElement('ul');
   [...block.children].forEach((row) => {
@@ -43,6 +44,20 @@ export default async function decorate(block) {
         const bubble = div.querySelector('u');
         if (bubble) {
           bubble.className = 'cards-card-bubble';
+          bubble.closest('p').className = 'cards-card-bubble-wrapper';
+        }
+        const subtitle = div.querySelector('h2 + p > strong');
+        if (subtitle && subtitle.parentNode.textContent === subtitle.textContent) {
+          const title = div.querySelector('h2');
+          const titleWrapper = document.createElement('div');
+          titleWrapper.className = 'cards-card-title';
+          titleWrapper.append(title.cloneNode(true), subtitle.parentNode);
+          title.replaceWith(titleWrapper);
+        }
+        const country = div.querySelector('.icon[class*=icon-flag-]');
+        if (country) {
+          country.closest('p').classList.add('cards-card-country');
+          div.classList.add('cards-card-country-wrapper');
         }
         const list = div.querySelector('ul, ol');
         if (list) {

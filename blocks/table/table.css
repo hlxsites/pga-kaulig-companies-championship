@@ -1,13 +1,27 @@
 main .table {
+  --table-text-color: var(--color-blue);
+
   max-width: 100%;
   overflow-x: auto;
-  color: var(--color-blue);
+  color: var(--table-text-color);
   font-size: var(--body-font-size-xs);
   line-height: 1.2;
 }
 
 main .table.light {
   color: var(--color-text);
+}
+
+main .table.stats {
+  min-height: 272px;
+}
+
+main .table.stats caption {
+  margin-bottom: 16px;
+  color: var(--heading-color);
+  font-size: var(--heading-font-size-m);
+  text-align: left;
+  text-transform: uppercase;
 }
 
 main .table table, main .table th, main .table td {
@@ -30,33 +44,58 @@ main .table th {
   text-transform: uppercase;
 }
 
-main .table.light th, main .table.light td {
-  border: 1px solid var(--color-gray);
-  text-align: left;
-}
-
 main .table td.table-cell-num {
   text-align: center;
 }
 
 main .table td:not(.table-cell-num) {
   font-weight: bold;
+  text-align: center;
+}
+
+main .table.light th, main .table.light td {
+  border-left: 1px solid var(--color-gray-light);
+  border-right: 1px solid var(--color-gray-light);
+  text-align: left;
 }
 
 main .table.light td {
   font-weight: normal;
 }
 
+main .table.stats th {
+  color: var(--heading-color);
+  text-align: center;
+}
+
+main .table.stats td {
+  text-align: center;
+}
+
+main .table.stats tr td:nth-child(1) {
+  font-weight: bold;
+}
+
+main .table.stats tr th:nth-child(2),
+main .table.stats tr td:nth-child(2),
+main .table.stats tr th:nth-child(n+4),
+main .table.stats tr td:nth-child(n+4) {
+  display: none;
+  visibility: hidden;
+}
+
+main .table.stats tr th:nth-child(8),
+main .table.stats tr td:nth-child(8) {
+  display: table-cell;
+  visibility: visible;
+}
+
 main .table table tbody tr:nth-child(odd) {
-  background-color: var(--color-white);
+  background-color: var(--highlight-background-color);
 }
 
 main .table table tbody tr:nth-child(even) {
   background-color: var(--background-color);
-}
-
-main .table.light table tbody tr {
-  background-color: transparent;
 }
 
 @media (min-width: 700px) {
@@ -66,5 +105,29 @@ main .table.light table tbody tr {
 
   main .table table, main .table th, main .table td {
     padding: 10px 20px;
+  }
+
+  main .table.stats {
+    min-height: 315px;
+  }
+
+  main .table.stats caption {
+    font-size: var(--heading-font-size-l);
+  }
+
+  main .table.stats tr th:nth-child(2),
+  main .table.stats tr td:nth-child(2),
+  main .table.stats tr th:nth-child(5),
+  main .table.stats tr td:nth-child(5) {
+    display: table-cell;
+    visibility: visible;
+  }
+}
+
+@media (min-width: 900px) {
+  main .table.stats tr th:nth-child(n),
+  main .table.stats tr td:nth-child(n) {
+    display: table-cell;
+    visibility: visible;
   }
 }

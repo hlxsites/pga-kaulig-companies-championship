@@ -6,6 +6,29 @@ import {
   fetchPlaceholders,
 } from '../../scripts/scripts.js';
 
+async function mergeLocalNews(feed, maxItems) {
+  const resp = await fetch('/query-index.json');
+  const json = await resp.json();
+  const newerThan = feed.items[feed.items.length - 1].created;
+  const matched = json.data.filter((item) => {
+    if (item.date) {
+      const itemDate = new Date(Math.round((item.date - (25567 + 1)) * 86400 * 1000)).valueOf();
+      item.created = itemDate;
+      item.link = item.path;
+      item.type = 'article';
+      return (itemDate > newerThan);
+    }
+    return false;
+  });
+  const merged = [...feed.items, ...matched];
+  const deduped = [...new Map(merged.map((m) => [
+    new URL(m.link, window.location.href).pathname.split('.')[0],
+    m,
+  ])).values()];
+  const sorted = deduped.sort((e1, e2) => e2.created - e1.created);
+  feed.items = sorted.slice(0, maxItems);
+}
+
 function filterNews(e) {
   const button = e.target.closest('button');
   const block = button.closest('.block');
@@ -62,12 +85,29 @@ function paginateNews(e) {
 
 export default async function decorate(block) {
   const config = readBlockConfig(block);
+
+  const pinnedItems = [];
+  const rows = [...block.children];
+  rows.forEach((row) => {
+    const pic = row.querySelector('picture');
+    const a = row.querySelector('a');
+    if (pic && a) {
+      pinnedItems.push({
+        type: 'article',
+        image: pic.querySelector('img').getAttribute('src'),
+        title: a.innerText,
+        link: a.href,
+        pinned: true,
+      });
+    }
+  });
+
   block.textContent = '';
   // set placeholder content
   const placeholderUl = document.createElement('ul');
   block.append(placeholderUl);
   for (let i = 0; i < 8; i += 1) {
-    const placeholder = document.createElement('div');
+    const placeholder = document.createElement('li');
     placeholder.className = 'news-placeholder';
     placeholderUl.append(placeholder);
   }
@@ -83,31 +123,39 @@ export default async function decorate(block) {
       let directURL;
       if (config.tags) {
         const tags = config.tags.replace(/ /g, '').split(',').join('+');
-        directURL = `${newsURL}/tags=${tags}&size=${limit}`;
+        directURL = `${newsURL}/tags=${tags}&size=${limit - pinnedItems.length}`;
       } else {
         const placeholders = await fetchPlaceholders();
-        directURL = `${newsURL}/path=/content&tags=${placeholders.newsTags}&size=${limit}`;
+        directURL = `${newsURL}/path=/content&tags=${placeholders.newsTags}&size=${limit - pinnedItems.length}`;
       }
       const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(directURL)}`);
       const json = await resp.json();
-      const ul = document.createElement('ul');
-      json.items.forEach((item) => {
-        const prefix = item.image.startsWith('brightcove') ? videoPrefix : damPrefix;
+
+      await mergeLocalNews(json, config.limit);
+
+      [...pinnedItems, ...json.items].forEach((item, idx) => {
+        let prefix = '';
+        if (item.image.startsWith('brightcove')) prefix = videoPrefix;
+        if (item.image.startsWith('/content/dam')) prefix = damPrefix;
         const li = document.createElement('li');
         li.classList.add('news-item', `news-item-${item.type}`);
         const video = item.videoId ? '<div class="news-item-play"></div>' : '';
         const a = document.createElement('a');
         a.href = item.link;
         a.innerHTML = `
-          <div class="news-item-image"><img src="${prefix}${item.image}"></div>
+          <div class="news-item-image"><img loading="${idx < 8 ? 'eager' : 'lazy'}" src="${item.pinned ? '' : prefix}${item.image}"></div>
           <div class="news-item-body"><a href="${item.link}">${item.title}</a></div>
           ${video}
         `;
         li.append(a);
-        ul.append(li);
+        const toReplace = placeholderUl.querySelector('.news-placeholder');
+        if (toReplace) {
+          toReplace.parentNode.replaceChild(li, toReplace);
+        } else {
+          placeholderUl.appendChild(li);
+        }
       });
-      block.innerHTML = '';
-      block.append(ul);
+
       // add filtering
       if (config.filter) {
         const filters = config.filter.split(',').map((f) => f.trim());

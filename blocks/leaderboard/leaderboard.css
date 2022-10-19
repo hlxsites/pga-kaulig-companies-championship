@@ -1,4 +1,6 @@
 main .leaderboard {
+  --leaderboard-heading-color: var(--color-blue);
+
   max-width: 100%;
   min-height: 558px; /* update after ads */
   line-height: 1.2;
@@ -52,7 +54,7 @@ main .leaderboard .leaderboard-leader-body p {
 
 main .leaderboard p.leaderboard-leader-body-title {
   margin-bottom: 8px;
-  color: var(--color-blue);
+  color: var(--leaderboard-heading-color);
   font-size: var(--heading-font-size-s);
 }
 
@@ -84,7 +86,7 @@ main .leaderboard .leaderboard-leader-stats > *:nth-child(2) {
 
 main .leaderboard p.leaderboard-leader-stats-title {
   margin-bottom: 2px;
-  color: var(--color-blue);
+  color: var(--leaderboard-heading-color);
   font-size: var(--body-font-size-xxs);
 }
 
@@ -193,7 +195,7 @@ main .leaderboard table td {
 }
 
 main .leaderboard table thead tr th {
-  color: var(--color-blue);
+  color: var(--leaderboard-heading-color);
   font-weight: normal;
 }
 
@@ -279,7 +281,7 @@ main .leaderboard table tbody p {
 main .leaderboard table tbody p.leaderboard-player {
   justify-content: flex-start;
   gap: 10px;
-  color: var(--color-blue);
+  color: var(--leaderboard-heading-color);
   font-weight: bold;
   text-align: left;
 }

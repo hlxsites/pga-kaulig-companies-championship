@@ -1,9 +1,16 @@
 // eslint-disable-next-line import/no-cycle
-import { decorateIcons, sampleRUM } from './scripts.js';
+import {
+  decorateIcons,
+  fetchPlaceholders,
+  sampleRUM,
+  decorateBlock,
+  loadBlock,
+} from './scripts.js';
 
-const isProd = window.location.hostname.endsWith('theplayers.com');
+const placeholders = await fetchPlaceholders();
+const isProd = window.location.hostname.endsWith(placeholders.hostname);
 
-if (!isProd) {
+if (!isProd === 'this') {
   // temporary override for analytics testing
   if (!localStorage.getItem('OptIn_PreviousPermissions')) localStorage.setItem('OptIn_PreviousPermissions', '{"aa":true,"mediaaa":true,"target":true,"ecid":true,"adcloud":true,"aam":true,"campaign":true,"livefyre":false}');
 }
@@ -62,8 +69,6 @@ window.pgatour.Omniture = {
 };
 
 window.pgatour.docWrite = document.write.bind(document);
-
-loadScript(`https://assets.adobedtm.com/d17bac9530d5/90b3c70cfef1/launch-1ca88359b76c${isProd ? '.min' : ''}.js`);
 
 /* setup favorite players */
 function alphabetize(a, b) {
@@ -191,19 +196,52 @@ function clearSelectPlayer() {
   if (selectPlayer) selectPlayer.selectedIndex = 0;
 }
 
+async function updateFavoriteLeaderboardAfterOperation(res) {
+  // eslint-disable-next-line no-use-before-define
+  updateFavoriteButtons(res.requestParams);
+}
+
 async function updateFavoritePlayersAfterAdd(res) {
   // eslint-disable-next-line no-use-before-define
   await writeFavoritePlayers(res.requestParams.data.favorites);
   clearFindPlayer();
   clearSelectPlayer();
+  updateFavoriteLeaderboardAfterOperation(res);
 }
 
 async function updateFavoritePlayersAfterRemove(res) {
   // eslint-disable-next-line no-use-before-define
   await writeFavoritePlayers(res.requestParams.data.favorites);
+  updateFavoriteLeaderboardAfterOperation(res);
 }
 
-function addFavoritePlayer(res) {
+function updateFavoritePlayerFromLeaderboard(res) {
+  const button = document.querySelector('.leaderboard-favorite-button[data-selected="true"]');
+  if (button) {
+    button.removeAttribute('data-selected');
+    const operation = button.getAttribute('data-op');
+    const playerId = button.getAttribute('data-id');
+    const tourCode = button.getAttribute('data-tour');
+    const { favorites } = res.data;
+    let newFavorites = favorites;
+    if (operation === 'add') {
+      newFavorites.push({
+        createdDate: new Date().toISOString(),
+        tourCode,
+        playerId,
+      });
+    } else if (operation === 'remove') {
+      newFavorites = newFavorites.filter((fave) => fave.playerId !== playerId);
+    }
+    // eslint-disable-next-line no-undef
+    gigya.accounts.setAccountInfo({
+      data: { favorites: newFavorites },
+      callback: updateFavoriteLeaderboardAfterOperation,
+    });
+  }
+}
+
+function addFavoritePlayerFromMenu(res) {
   const { favorites } = res.data;
   const playerId = getPlayerIdFromForm();
   const tourCode = getTourCodeFromForm();
@@ -225,7 +263,14 @@ function addFavoritePlayer(res) {
   }
 }
 
-function removeFavoritePlayer(res) {
+function addFavoritePlayerFromLeaderboard(e) {
+  const button = e.target.closest('button');
+  button.setAttribute('data-selected', true);
+  // eslint-disable-next-line no-undef
+  gigya.accounts.getAccountInfo({ callback: updateFavoritePlayerFromLeaderboard });
+}
+
+function removeFavoritePlayerFromMenu(res) {
   const { favorites } = res.data;
   const favoritesList = document.querySelector('.gigya-your-favorites');
   const selectedPlayer = favoritesList.querySelector('[data-selected="true"]');
@@ -242,14 +287,21 @@ function removeFavoritePlayer(res) {
   }
 }
 
-function updateFavoritePlayers(e, operation, id) {
+function removeFavoritePlayerFromLeaderboard(e) {
+  const button = e.target.closest('button');
+  button.setAttribute('data-selected', true);
+  // eslint-disable-next-line no-undef
+  gigya.accounts.getAccountInfo({ callback: updateFavoritePlayerFromLeaderboard });
+}
+
+function updateFavoritePlayersFromMenu(e, operation, id) {
   e.preventDefault();
   if (id && operation === 'add') {
     // eslint-disable-next-line no-undef
-    gigya.accounts.getAccountInfo({ callback: addFavoritePlayer });
+    gigya.accounts.getAccountInfo({ callback: addFavoritePlayerFromMenu });
   } else if (id && operation === 'remove') {
     // eslint-disable-next-line no-undef
-    gigya.accounts.getAccountInfo({ callback: removeFavoritePlayer });
+    gigya.accounts.getAccountInfo({ callback: removeFavoritePlayerFromMenu });
   }
 }
 
@@ -269,7 +321,7 @@ async function writeFavoritePlayers(favorites) {
       const target = e.target.closest('[data-id]');
       target.setAttribute('data-selected', true);
       const id = target.getAttribute('data-id');
-      updateFavoritePlayers(e, 'remove', id);
+      updateFavoritePlayersFromMenu(e, 'remove', id);
     });
     wrapper.append(row);
   });
@@ -305,12 +357,96 @@ async function setupFavoritePlayersScreen(userData) {
     updateSelectPlayer(selectPlayer, tourDropdown.value, players[tourDropdown.value]);
     addButton.addEventListener('click', (e) => {
       const id = getPlayerIdFromForm();
-      updateFavoritePlayers(e, 'add', id);
+      updateFavoritePlayersFromMenu(e, 'add', id);
     });
   }
   // remove non-submit button
   const submit = document.querySelector('#gigya-players-screen.gigya-screen input[type=submit].gigya-input-submit');
   if (submit) submit.remove();
+}
+
+function updateFavoriteButtons(res) {
+  const buttons = document.querySelectorAll('.leaderboard-favorite-button');
+  if (res && res != null && res.data) {
+    const favorites = res.data.favorites || [];
+    buttons.forEach((btn) => {
+      // eslint-disable-next-line no-use-before-define
+      btn.removeEventListener('click', promptToLogin);
+      const playerId = btn.getAttribute('data-id');
+      const isFavorite = favorites.find((fave) => fave.playerId === playerId);
+      const icon = btn.querySelector('.icon');
+      const tooltip = btn.nextElementSibling;
+      if (isFavorite) {
+        btn.setAttribute('data-op', 'remove');
+        if (icon) icon.className = 'icon icon-minus';
+        if (tooltip && tooltip.className === 'tooltip') {
+          tooltip.querySelector('.tooltip-op').textContent = 'Remove from';
+        }
+        btn.removeEventListener('click', addFavoritePlayerFromLeaderboard);
+        btn.addEventListener('click', removeFavoritePlayerFromLeaderboard);
+      } else {
+        btn.setAttribute('data-op', 'add');
+        // ensure add to favorite button
+        if (icon) icon.className = 'icon icon-plus';
+        if (tooltip && tooltip.className === 'tooltip') {
+          tooltip.querySelector('.tooltip-op').textContent = 'Add to';
+        }
+        btn.removeEventListener('click', removeFavoritePlayerFromLeaderboard);
+        btn.addEventListener('click', addFavoritePlayerFromLeaderboard);
+      }
+    });
+  }
+}
+
+function resetFavoriteButtons() {
+  const buttons = document.querySelectorAll('.leaderboard-favorite-button');
+  buttons.forEach((btn) => {
+    const icon = btn.querySelector('.icon');
+    const tooltip = btn.nextElementSibling;
+    btn.setAttribute('data-op', 'add');
+    // ensure add to favorite button
+    if (icon) icon.className = 'icon icon-plus';
+    if (tooltip && tooltip.className === 'tooltip') {
+      tooltip.querySelector('.tooltip-op').textContent = 'Add to';
+    }
+    btn.removeEventListener('click', removeFavoritePlayerFromLeaderboard);
+    btn.removeEventListener('click', addFavoritePlayerFromLeaderboard);
+    // eslint-disable-next-line no-use-before-define
+    btn.addEventListener('click', promptToLogin);
+  });
+}
+
+function promptToLogin() {
+  const modal = document.createElement('aside');
+  modal.classList.add('login-modal');
+  modal.innerHTML = `<div class="login-modal-close-wrapper">
+      <button class="login-modal-close"><span class="icon icon-close"></span></button>
+    </div>
+    <p>${placeholders.loginPrompt}</p>
+    <div class="button-container">
+      <button class="button" id="login-modal-button">${placeholders.loginYes}</button> 
+      <button class="button login-modal-close">${placeholders.loginNo}</button> 
+    </div>`;
+  modal.querySelector('#login-modal-button').addEventListener('click', () => {
+    // eslint-disable-next-line no-use-before-define
+    showLoginMenu();
+    modal.remove();
+  });
+  modal.querySelectorAll('.login-modal-close').forEach((btn) => {
+    btn.addEventListener('click', () => modal.remove());
+  });
+  document.querySelector('main').prepend(modal);
+}
+
+function setupFavoriteButtons(res) {
+  const favoriteButtons = document.querySelectorAll('.leaderboard-favorite-button');
+  favoriteButtons.forEach((button) => {
+    if (res && res != null && res.errorCode === 0) { // user is logged in
+      updateFavoriteButtons(res);
+    } else {
+      button.addEventListener('click', promptToLogin);
+    }
+  });
 }
 
 function setupAccountMenu(res) {
@@ -351,7 +487,7 @@ function showLoginMenu() {
     screenSet: 'Website-RegistrationLogin',
     startScreen: 'gigya-long-login-screen',
     // eslint-disable-next-line no-use-before-define
-    onAfterSubmit: updateUserButton,
+    onAfterSubmit: updateGigyaButtons,
   });
 }
 
@@ -408,6 +544,7 @@ function clearUserButton() {
 
 function logout() {
   clearUserButton();
+  resetFavoriteButtons();
   // eslint-disable-next-line no-undef
   gigya.accounts.hideScreenSet({ screenSet: 'Website-ManageProfile' });
   // eslint-disable-next-line no-undef
@@ -431,14 +568,25 @@ function setupUserButton(res) {
   }
 }
 
+function updateGigyaButtons(res) {
+  updateUserButton(res);
+  updateFavoriteButtons(res);
+}
+
+function setupGigyaButtons(res) {
+  setupUserButton(res);
+  setupFavoriteButtons(res);
+}
+
 function checkIfLoggedIn(res) {
   if (res && res != null && res.errorCode === 0) { // user is logged in
     // eslint-disable-next-line no-undef
-    gigya.accounts.getAccountInfo({ callback: setupUserButton });
+    gigya.accounts.getAccountInfo({ callback: setupGigyaButtons });
   } else {
     clearUserButton();
     removeUserInfo();
     setupUserButton();
+    setupFavoriteButtons();
   }
 }
 
@@ -447,7 +595,12 @@ function setupGigya() {
   gigya.accounts.session.verify({ callback: checkIfLoggedIn });
 }
 
-function initGigya() {
+// eslint-disable-next-line import/prefer-default-export
+export function initGigya() {
+  const userButton = document.getElementById('nav-user-button');
+  if (userButton) userButton.replaceWith(userButton.cloneNode(true));
+  const favoriteButtons = document.querySelectorAll('.leaderboard-favorite-button');
+  if (favoriteButtons) favoriteButtons.forEach((btn) => btn.replaceWith(btn.cloneNode(true)));
   loadScript(
     'https://cdns.gigya.com/JS/socialize.js?apikey=3__4H034SWkmoUfkZ_ikv8tqNIaTA0UIwoX5rsEk96Ebk5vkojWtKRZixx60tZZdob',
     setupGigya,
@@ -460,23 +613,38 @@ initGigya();
 async function populateStatusBar(statusBar) {
   if (statusBar) {
     const statusBarData = document.querySelector('.status-bar-data');
+    const tournament = `${placeholders.tourCode}${placeholders.tournamentId}`;
     // fetch weather
     try {
-      const resp = await fetch('https://www.pgatour.com/bin/data/feeds/weather.json/r011');
+      const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=https://www.pgatour.com/bin/data/feeds/weather.json/${tournament}`);
       const { current_observation: weatherData } = await resp.json();
       const location = weatherData.display_location.full;
       const icon = weatherData.icon_url.replace('.gif', '.png');
       const temp = weatherData.temp_f;
-      const weather = document.createElement('div');
-      weather.className = 'status-bar-weather';
-      weather.innerHTML = `<p>
-          <a href="/weather">
-            <span>${location}</span>
-            <img src="${icon}" alt="${weatherData.weather}"/ >
-            <span class="status-bar-temp">${temp}</span>
-          </a>
-        </p>`;
-      statusBarData.append(weather);
+      sessionStorage.setItem(`${tournament}Weather`, JSON.stringify({
+        location, icon, temp,
+      }));
+      const weatherDisplayed = statusBar.querySelector('.status-bar-weather');
+      if (weatherDisplayed) {
+        const barLocation = weatherDisplayed.querySelector('.status-bar-location');
+        barLocation.textContent = location;
+        const barImg = weatherDisplayed.querySelector('img');
+        barImg.src = icon;
+        barImg.alt = weatherData.weather;
+        const barTemp = weatherDisplayed.querySelector('.status-bar-temp');
+        barTemp.textContent = temp;
+      } else {
+        const weather = document.createElement('div');
+        weather.className = 'status-bar-weather';
+        weather.innerHTML = `<p>
+            <a href="/weather">
+              <span class="status-bar-location">${location}</span>
+              <img src="${icon}" alt="${weatherData.weather}"/ >
+              <span class="status-bar-temp">${temp}</span>
+            </a>
+          </p>`;
+        statusBarData.append(weather);
+      }
     } catch (error) {
       // eslint-disable-next-line no-console
       console.log('failed to load weather', error);
@@ -500,23 +668,48 @@ function getCookie(cookieName) {
   return null;
 }
 
-async function setGeoCookies() {
-  try {
-    const resp = await fetch('https://geolocation.onetrust.com/cookieconsentpub/v1/geo/location');
-    if (resp.ok) {
-      const text = await resp.text();
-      const json = JSON.parse(text.replace('jsonFeed(', '').replace('"});', '"}'));
-      Object.keys(json).forEach((key) => {
-        const cookieName = `PGAT_${key.charAt(0).toUpperCase() + key.slice(1)}`;
-        const cookie = getCookie(cookieName);
-        if (!cookie || cookie !== json[key]) document.cookie = `${cookieName}=${json[key]}`;
-      });
-    }
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('Setting geo cookies failed', error);
+async function OptanonWrapper() {
+  const geoInfo = window.Optanon.getGeolocationData();
+  Object.keys(geoInfo).forEach((key) => {
+    const cookieName = `PGAT_${key.charAt(0).toUpperCase() + key.slice(1)}`;
+    const cookie = getCookie(cookieName);
+    if (!cookie || cookie !== geoInfo[key]) document.cookie = `${cookieName}=${geoInfo[key]}`;
+  });
+
+  const OneTrustActiveGroup = () => {
+    /* eslint-disable */
+    var y = true, n = false;
+    var y_y_y = {'aa': y, 'aam': y, 'ecid': y};
+    var n_n_n = {'aa': n, 'aam': n, 'ecid': n};
+    var y_n_y = {'aa': y, 'aam': n, 'ecid': y};
+    var n_y_y = {'aa': n, 'aam': y, 'ecid': y};
+    
+    if (typeof OnetrustActiveGroups != 'undefined')
+      if (OnetrustActiveGroups.includes(',C0002,'))
+        return OnetrustActiveGroups.includes(',C0004,')?y_y_y:y_n_y;
+      else
+        return OnetrustActiveGroups.includes(',C0004,')?n_y_y:n_n_n;
+    
+    return geoInfo.country == 'US'?y_y_y:n_n_n;
+    /* eslint-enable */
+  };
+  if (!localStorage.getItem('OptIn_PreviousPermissions')) {
+    const adobeSettings = OneTrustActiveGroup();
+    adobeSettings.tempImplied = true;
+    localStorage.setItem('OptIn_PreviousPermissions', JSON.stringify(adobeSettings));
   }
+
+  loadScript(`https://assets.adobedtm.com/d17bac9530d5/90b3c70cfef1/launch-1ca88359b76c${isProd ? '.min' : ''}.js`);
 }
 
-const cookieScript = loadScript('https://cdn.cookielaw.org/scripttemplates/otSDKStub.js', setGeoCookies);
-cookieScript.setAttribute('data-domain-script', `262c6c79-a114-41f0-9c07-52cb1fb7390c${isProd ? '' : '-test'}`);
+const otId = placeholders.onetrustId || '262c6c79-a114-41f0-9c07-52cb1fb7390c';
+const cookieScript = loadScript('https://cdn.cookielaw.org/scripttemplates/otSDKStub.js');
+cookieScript.setAttribute('data-domain-script', `${otId}${isProd ? '' : '-test'}`);
+
+window.OptanonWrapper = OptanonWrapper;
+
+if (document.querySelector('.ads')) {
+  const adsBlock = document.querySelector('.ads');
+  decorateBlock(adsBlock);
+  loadBlock(adsBlock);
+}

@@ -1,0 +1,356 @@
+main .past-results {
+  --past-results-text-color: var(--color-blue);
+}
+
+main .past-results ul {
+  list-style: none;
+  padding: 0;
+}
+
+main .past-results .past-results-container {
+  color: var(--past-results-text-color);
+}
+
+main .past-results h2.title {
+  color: var(--past-results-text-color);
+  font-family: var(--body-font-family);
+  font-size: var(--heading-font-size-l);
+  text-transform: unset;
+}
+
+main .past-results span.row {
+  display: block;
+}
+
+@media (min-width: 700px) {
+  main .past-results span.row {
+    display: unset;
+  }
+
+  main .past-results .pic {
+    margin: 0 4px;
+  }
+
+  main .past-results .pic::after {
+    content: '\2022';
+  }
+}
+
+main .past-results .note-item {
+  border-top: 1px solid var(--color-gray-light);
+  border-bottom: 1px solid var(--color-gray-light);
+  padding: 8px 0;
+}
+
+main .past-results .note-item button {
+  position: relative;
+  width: 100%;
+  margin: unset;
+  border: 0;
+  padding: unset;
+  background-color: unset;
+  color: unset;
+  font-size: unset;
+  text-align: left;
+  text-transform: unset;
+}
+
+.past-results-notes .note-item button::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  transform: translateY(-50%) rotate(45deg);
+  transition: transform .2s;
+}
+
+.past-results-notes .note-item button[aria-expanded=true]::after {
+  transform: translateY(-50%) rotate(225deg);
+}
+
+main .past-results .note-item .note-content {
+  margin-top: 8px;
+  color: var(--text-color);
+}
+
+/* controls */
+main .past-results .controls-item {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+main .past-results .controls-item > * {
+  flex: 1 0 auto;
+}
+
+main .past-results select {
+  width: 100%;
+  border: 0;
+  padding: 8px;
+  font-family: inherit;
+  font-size: inherit;
+  text-transform: uppercase;
+}
+
+main .past-results .button-print {
+  display: none;
+  visibility: hidden;
+  color: var(--color-gray);
+  font-size: var(--body-font-size-xxs);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+main .past-results .button-print svg {
+  width: 24px;
+  height: 24px;
+}
+
+@media (min-width: 700px) {
+  main .past-results .controls-left {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+  }
+}
+
+@media (min-width: 900px) {
+  main .past-results .controls.past-results-container {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 32px;
+  }
+
+  main .past-results .button-print {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    visibility: visible;
+  }
+}
+
+/* switch */
+main .past-results .switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--body-font-size-xs);
+}
+
+main .past-results .switch-input {
+  display: none;
+  visibility: hidden;
+}
+
+main .past-results .switch-title-on,
+main .past-results .switch-title-off {
+  color: var(--color-gray-light);
+  cursor: pointer;
+  transition: color .2s;
+}
+
+main .past-results .switch-title-on {
+  pointer-events: all;
+}
+
+main .past-results .switch-title-off {
+  color: var(--text-color);
+  pointer-events: none;
+}
+
+main .past-results .switch-input:checked ~ .switch-title-on {
+  color: var(--text-color);
+  pointer-events: none;
+}
+
+main .past-results .switch-input:checked ~ .switch-title-off {
+  color: var(--color-gray-light);
+  pointer-events: all;
+}
+
+main .past-results .switch-button::after {
+  content: '';
+  box-sizing: inherit;
+  position: absolute;
+  top: 50%;
+  left: 1px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--highlight-background-color);
+  transform: translateY(-50%);
+  transition: left .2s, background-color .2s;
+}
+
+main .past-results .switch-input:checked ~ .switch-button::after {
+  left: 11px;
+}
+
+main .past-results .switch .switch-button {
+  box-sizing: border-box;
+  display: inline-block;
+  position: relative;
+  width: 26px;
+  height: 16px;
+  margin: 0 8px;
+  border-radius: 8px;
+  background-color: var(--past-results-text-color);
+  cursor: pointer;
+}
+
+@media (min-width: 700px) {
+  main .past-results .switch {
+    justify-content: flex-end;
+  }
+}
+
+@media (min-width: 900px) {
+  main .past-results .switch {
+    justify-content: flex-start;
+  }
+}
+
+/* table */
+main .past-results table {
+  min-width: 100%;
+  overflow-x: scroll;
+}
+
+main .past-results table th,
+main .past-results table td {
+  position: relative;
+  border: 1px solid var(--color-gray-light);
+  padding: 16px 8px;
+  font-size: var(--body-font-size-s);
+  line-height: 1.2;
+}
+
+main .past-results table th {
+  background-color: var(--background-color);
+  background-image: linear-gradient(var(--highlight-background-color), var(--background-color));
+}
+
+main .past-results table th.head-row-top {
+  padding: 8px;
+}
+
+main .past-results table th.sortable {
+  text-align: center;
+  cursor: pointer;
+}
+
+main .past-results table th.arrow {
+  background-image: unset;
+  background-color: var(--background-color);
+}
+
+main .past-results table th.arrow::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 6px;
+  height: 6px;
+  color: inherit;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  transition: transform .2s;
+}
+
+main .past-results table th.arrow.down::after {
+  transform: rotate(45deg) translateY(65%);
+}
+
+main .past-results table th.arrow.up::after {
+  bottom: 8px;
+  transform: rotate(225deg) translateY(-65%);
+}
+
+main .past-results table .table-data tr td {
+  background-color: var(--highlight-background-color);
+}
+
+main .past-results table .table-data tr:nth-child(even) td {
+  background-color: var(--background-color);
+}
+
+main .past-results table .hidden-small,
+main .past-results table .position,
+main .past-results table .to-par-value {
+  display: none;
+  visibility: hidden;
+  text-align: center;
+}
+
+main .past-results table td[data-sort-fedexcup-points],
+main .past-results table td.total-score {
+  text-align: center;
+}
+
+main .past-results table[data-display-rounds='1'] .round.round-2::before,
+main .past-results table[data-display-rounds='1'] .round.round-3::before,
+main .past-results table[data-display-rounds='1'] .round.round-4::before,
+main .past-results table[data-display-rounds='2'] .round.round-3::before,
+main .past-results table[data-display-rounds='2'] .round.round-4::before,
+main .past-results table[data-display-rounds='3'] .round.round-4::before,
+main .past-results table.hide-total-values [data-sort-total-score]::before {
+  content: '--';
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: inherit;
+}
+
+main .past-results table[data-display-rounds='1'] .position.round-1,
+main .past-results table[data-display-rounds='1'] .to-par-value.round-1,
+main .past-results table[data-display-rounds='2'] .position.round-2,
+main .past-results table[data-display-rounds='2'] .to-par-value.round-2,
+main .past-results table[data-display-rounds='3'] .position.round-3,
+main .past-results table[data-display-rounds='3'] .to-par-value.round-3,
+main .past-results table[data-display-rounds='4'] .position.round-4,
+main .past-results table[data-display-rounds='4'] .to-par-value.round-4 {
+  display: block;
+  visibility: visible;
+}
+
+main .past-results table[data-display-score='total-score'] .to-par,
+main .past-results table[data-display-score='to-par'] .total-score {
+  display: none;
+  visibility: hidden;
+}
+
+main .past-results .print-visible {
+  display: none;
+  visibility: hidden;
+}
+
+@media only print {
+  main .past-results .print-hidden .note-list {
+    display: none;
+    visibility: hidden;
+  }
+
+  main .past-results .print-visible {
+    display: block;
+    visibility: visible;
+  }
+}
+
+@media (min-width: 700px) {
+  main .past-results table .hidden-small {
+    display: table-cell;
+    visibility: visible;
+  }
+}

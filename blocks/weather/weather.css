@@ -265,7 +265,7 @@ main .weather.forecast .weather-toggle button {
 }
 
 main .weather.forecast .weather-toggle button:hover {
-  background-color: var(--color-blue);
+  background-color: var(--link-hover-color);
 }
 
 main .weather.forecast .weather-toggle button[aria-selected=false] {

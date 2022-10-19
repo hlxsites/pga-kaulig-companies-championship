@@ -1,4 +1,6 @@
 main .sponsors {
+  --sponsors-background-color: var(--color-tan-95);
+
   display: grid;
   gap: 16px;
 }
@@ -68,7 +70,7 @@ main .sponsors .sponsors-sponsor-front {
 }
 
 main .sponsors .sponsors-sponsor-back {
-  background-color: var(--color-tan-95);
+  background-color: var(--sponsors-background-color);
   transform: rotateY(180deg);
 }
 

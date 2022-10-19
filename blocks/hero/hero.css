@@ -8,6 +8,10 @@ main .hero-wrapper {
 }
 
 main .hero {
+  --hero-btn-primary-color: var(--color-tan-95);
+  --hero-btn-secondary-color: var(--color-blue-95);
+  --hero-btn-secondary-hover-color: var(--color-white);
+
   position: relative;
   height: 230px;
   background-image: linear-gradient(#0002, #0006);
@@ -22,8 +26,10 @@ main .hero > div {
 main .hero > div > div {
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 0 8px;
   width: 100%;
   height: 230px;
   max-width: 1020px;
@@ -85,6 +91,7 @@ main .hero > div > div {
 }
 
 main .hero h1 {
+  flex: 1 0 100%;
   margin: .25em 0;
   color: var(--overlay-text-color);
   font-size: var(--heading-font-size-l);
@@ -92,25 +99,42 @@ main .hero h1 {
   text-shadow: 0 0 10px #0008;
 }
 
+main .hero h1.heading-x-long  {
+  font-size: var(--heading-font-size-m);
+}
+
 @media (min-width: 700px) {
   main .hero h1 {
     font-size: var(--heading-font-size-xxl);
   }
+
+  main .hero h1.heading-x-long {
+    font-size: var(--heading-font-size-l);
+  }
 }
 
 @media (min-width: 900px) {
-  main .hero h1 {
+  main .hero h1,
+  main .hero h1.heading-x-long {
     font-size: var(--heading-font-size-xl);
   }
 
   main .hero.hero-buttons h1 {
     text-align: left;
   }
+
+  main .hero.hero-buttons h1.heading-x-long {
+    font-size: var(--heading-font-size-l);
+  }
 }
 
 @media (min-width: 1200px) {
   main .hero h1 {
     font-size: var(--heading-font-size-xxl);
+  }
+
+  main .hero.hero-buttons h1.heading-x-long {
+    font-size: var(--heading-font-size-xl);
   }
 }
 
@@ -174,6 +198,7 @@ main .hero p.button-container {
 
 main .hero a.button {
   min-width: 115px;
+  font-size: var(--body-font-size-xs);
   font-weight: lighter;
 }
 
@@ -183,23 +208,25 @@ main .hero a.button:hover {
 
 main .hero a.button.primary:any-link {
   border-color: transparent;
-  background-color: var(--color-tan-95);
-  font-size: var(--body-font-size-xs);
+  background-color: var(--hero-btn-primary-color);
 }
 
 main .hero a.button.secondary:any-link {
-  background-color: var(--color-blue);
-  font-size: var(--body-font-size-m);
+  background-color: var(--hero-btn-secondary-color);
 }
 
 main .carousel a.button.secondary:any-link:hover {
-  color: var(--color-white);
+  color: var(--hero-btn-secondary-hover-color);
   border-color: var(--color-white);
+}
+
+main .hero a.button.read-more:any-link {
+  margin-top: 4px;
 }
 
 @media (min-width: 700px) {
   main .hero p.button-container {
-    margin-top: 32px;
+    margin-top: 8px;
     order: 2;
   }
 
@@ -210,6 +237,11 @@ main .carousel a.button.secondary:any-link:hover {
   main .hero a.button.primary:any-link,
   main .hero a.button.secondary:any-link {
     font-size: var(--body-font-size-l);
+  }
+
+  main .hero a.button.read-more:any-link {
+    margin-top: 8px;
+    margin-bottom: 8px;
   }
 }
 
@@ -226,6 +258,13 @@ main .carousel a.button.secondary:any-link:hover {
   main .hero a.button.primary:any-link,
   main .hero a.button.secondary:any-link {
     font-size: var(--body-font-size-xxl);
+  }
+
+  main .hero a.button.read-more:any-link {
+    min-width: unset;
+    width: max-content;
+    margin-top: 4px;
+    font-size: var(--body-font-size-l);
   }
 }
 

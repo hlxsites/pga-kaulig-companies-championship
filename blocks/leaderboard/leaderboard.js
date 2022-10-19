@@ -1,4 +1,9 @@
-import { readBlockConfig, decorateIcons } from '../../scripts/scripts.js';
+import {
+  readBlockConfig,
+  decorateIcons,
+  fetchPlaceholders,
+  updateExternalLinks,
+} from '../../scripts/scripts.js';
 
 function generateUserTrackingId(id) {
   return window.pgatour.setTrackingUserId(`id${id}`);
@@ -55,8 +60,10 @@ function calculateTP(start, current) {
 }
 
 async function populateLeaderboard(block, config) {
+  const placeholders = await fetchPlaceholders();
   // fetch leaderboard content
-  const resp = await fetch(`https://statdata.pgatour.com/r/011/leaderboard-top5.json?userTrackingId=${generateUserTrackingId(config.id)}`);
+  const tournament = `${placeholders.tourCode}/${placeholders.tournamentId}`;
+  const resp = await fetch(`https://statdata.pgatour.com/${tournament}/leaderboard-top5.json?userTrackingId=${generateUserTrackingId(config.id)}`);
   if (resp.ok) {
     const json = await resp.json();
     if (json.leaderboard && json.leaderboard.players) {
@@ -64,7 +71,6 @@ async function populateLeaderboard(block, config) {
       const [table, body] = buildLeaderboardTable();
       const buttons = document.createElement('div');
       buttons.className = 'button-container';
-      buttons.innerHTML = '<a href="/tee-times" class="button secondary">Tee Times</a>';
       const leaderWrapper = document.createElement('div');
       players.forEach((player, i) => {
         const bio = player.player_bio;
@@ -99,7 +105,14 @@ async function populateLeaderboard(block, config) {
           scorecard.className = 'button primary';
           scorecard.textContent = 'View full scorecard';
           scorecard.href = `https://www.pgatour.com/players/player.${player.player_id}.${bio.first_name}-${bio.last_name}.html/scorecards/${json.leaderboard.tournament_id}`.toLowerCase();
-          buttons.prepend(scorecard);
+          buttons.append(scorecard);
+          if (config['button-link'] && config['button-text']) {
+            const secondaryBtn = document.createElement('a');
+            secondaryBtn.className = 'button secondary';
+            secondaryBtn.textContent = config['button-text'];
+            secondaryBtn.href = config['button-link'];
+            buttons.append(secondaryBtn);
+          }
           decorateIcons(leader);
           leader.append(buttons);
           leaderWrapper.append(leader);
@@ -108,14 +121,18 @@ async function populateLeaderboard(block, config) {
         const row = buildRow();
         const favoriteButtonCell = buildCell();
         favoriteButtonCell.className = 'leaderboard-favorite';
-        favoriteButtonCell.innerHTML = `<button data-tour="${json.leaderboard.tour_code}" data-id="${player.player_id}">
+        favoriteButtonCell.innerHTML = `<button class="leaderboard-favorite-button" data-tour="${json.leaderboard.tour_code}" data-id="${player.player_id}" data-op="add">
           <span class="icon icon-plus"></span>
         </button>
-        <span class="tooltip">Add to <br /><strong>Favorite Players</strong></span>`;
+        <span class="tooltip"><span class="tooltip-op">Add to</span> <br /><strong>Favorite Players</strong></span>`;
         row.append(favoriteButtonCell);
+        const favoriteButton = favoriteButtonCell.querySelector('button');
+        favoriteButton.addEventListener('click', () => {
+          import('../../scripts/delayed.js').then((module) => module.initGigya());
+        });
         const playerData = [
           player.current_position,
-          `<p><span class="icon icon-${posMove ? 'up' : 'down'}"></span> ${tp}</p>`,
+          `<p>${tp !== 0 ? `<span class="icon icon-${posMove ? 'up' : 'down'}"></span> ${tp}` : '--'}</p>`,
           `<p class="leaderboard-player"><span class="icon icon-flag-${bio.country.toLowerCase()}"></span> ${bio.first_name} ${bio.last_name}</p>`,
           player.total,
           player.thru < 18 ? player.thru : 'F',
@@ -157,6 +174,7 @@ async function populateLeaderboard(block, config) {
       tableWrapper.append(table, footer);
       block.append(tableWrapper);
     }
+    updateExternalLinks(block);
   }
 }
 

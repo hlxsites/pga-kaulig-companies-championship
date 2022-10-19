@@ -2,11 +2,49 @@
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;700&display=swap');
 
+main .login-modal {
+  box-sizing: border-box;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  max-width: 520px;
+  padding: 16px;
+  background-color: var(--highlight-background-color);
+  box-shadow: 0 0 100vh 100vh rgba(180 180 180 / 90%);
+  z-index: 2;
+}
+
+main .login-modal .button-container > *:not(:last-of-type) {
+  margin-right: 8px;
+}
+
+main .login-modal .login-modal-close-wrapper {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+main .login-modal .login-modal-close-wrapper button {
+  background-color: unset;
+  margin: unset;
+  padding: unset;
+}
+
+main .login-modal .icon.icon-close {
+  color: var(--link-color);
+}
+
 /* gigya */
+body [class*=gigya] {
+  --gigya-heading-color: var(--color-blue);
+  --gigya-accent-color: var(--color-tan);
+}
 
 /* top bar */
 body .gigya-style-modern div.gigya-screen-dialog-top {
-  background-color: var(--color-blue);
+  background-color: var(--gigya-heading-color);
   padding: 16px 32px;
 }
 
@@ -16,16 +54,17 @@ body .gigya-style-modern div.gigya-screen-dialog-caption {
   text-transform: uppercase;
 }
 
-/* close button */
-body .gigya-style-modern div.gigya-screen-dialog-close > a > img {
-  filter: brightness(2) grayscale(1);
+body .gigya-style-modern.gigya-screen-dialog-mobile div.gigya-screen-dialog-inner {
+  margin-top: 64px;
 }
 
-body .gigya-style-modern div.gigya-screen-dialog-close > a > img:hover {
-  filter: brightness(1) grayscale(1);
+body .gigya-style-modern.gigya-screen-dialog-mobile div.gigya-screen-dialog-top {
+  line-height: unset;
+  height: 64px;
 }
 
 /* body */
+/* stylelint-disable-next-line no-descending-specificity */
 body .gigya-screen, body .gigya-screen *, body .gigya-screen .gigya-label-text {
   color: var(--text-color);
   font-family: var(--body-font-family);
@@ -41,6 +80,20 @@ body .gigya-screen.portrait {
 body .gigya-screen a, body .gigya-screen a:active, 
 body .gigya-screen a:link, body .gigya-screen a:visited {
   color: var(--link-color);
+}
+
+body .gigya-style-modern div.gigya-screen-dialog-close > a {
+  padding: 0;
+}
+
+/* close button */
+body .gigya-style-modern div.gigya-screen-dialog-close > a > img {
+  filter: brightness(2) grayscale(1);
+  height: 15px;
+}
+
+body .gigya-style-modern div.gigya-screen-dialog-close > a > img:hover {
+  filter: brightness(1) grayscale(1);
 }
 
 /* button */
@@ -79,11 +132,12 @@ body .gigya-your-favorites > div p {
   justify-self: start;
 }
 
+/* stylelint-disable-next-line no-descending-specificity */
 body .gigya-your-favorites > div button {
   height: 22px;
   width: 22px;
   border-radius: 1.79px;
-  background-color: var(--color-tan);
+  background-color: var(--gigya-accent-color);
 }
 
 body .gigya-your-favorites > div button:hover {

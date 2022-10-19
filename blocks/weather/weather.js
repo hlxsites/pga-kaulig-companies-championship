@@ -1,4 +1,9 @@
-import { toClassName, createOptimizedPicture, decorateIcons } from '../../scripts/scripts.js';
+import {
+  toClassName,
+  createOptimizedPicture,
+  decorateIcons,
+  fetchPlaceholders,
+} from '../../scripts/scripts.js';
 
 function toggleWeather(e) {
   const button = e.target.closest('button');
@@ -27,13 +32,15 @@ function buildRow(data) {
 
 export default async function decorate(block) {
   const blockClasses = [...block.classList];
-  const weatherPrefix = 'https://www.pgatour.com/bin/data/feeds';
+  const placeholders = await fetchPlaceholders();
+  const tournament = `${placeholders.tourCode}${placeholders.tournamentId}`;
+  const weatherPrefix = 'https://little-forest-58aa.david8603.workers.dev/?url=https://www.pgatour.com/bin/data/feeds';
   if (blockClasses.includes('forecast')) {
     block.parentNode.classList.add('forecast-wrapper');
     // fetch weather
     try {
-      const hourlyResp = await fetch(`${weatherPrefix}/hourly.json/r011`);
-      const dailyResp = await fetch(`${weatherPrefix}/forecast10day.json/r011`);
+      const hourlyResp = await fetch(`${weatherPrefix}/hourly.json/${tournament}`);
+      const dailyResp = await fetch(`${weatherPrefix}/forecast10day.json/${tournament}`);
       if (hourlyResp.ok && dailyResp.ok) {
         const { hourly_forecast: hourlyData } = await hourlyResp.json();
         const { forecast } = await dailyResp.json();
@@ -71,7 +78,7 @@ export default async function decorate(block) {
           col.append(
             buildRow(hour.FCTTIME.civil),
             buildRow(`${hour.wspd.english} mp/h ${hour.wdir.dir}`),
-            buildRow(`<img src="${hour.icon_url.replace('.gif', '.png')}" alt="${hour.condition}" /> ${hour.condition}`),
+            buildRow(`<img src="${hour.icon_url.replace('.gif', '.png')}" alt="${hour.condition}" /> ${hour.condition.replaceAll('/', '/<wbr>')}`),
             buildRow(`<span class="weather-temp">${hour.temp.english}</span>`),
             buildRow(`<span class="weather-humidity">${hour.humidity}</span>`),
             buildRow(`<span class="weather-chance-of-rain">${hour.pop}</span>`),
@@ -85,7 +92,7 @@ export default async function decorate(block) {
           col.append(
             buildRow(day.date.weekday),
             buildRow(`${day.avewind.mph} mp/h ${day.avewind.dir}`),
-            buildRow(`<img src="${day.icon_url.replace('.gif', '.png')}" alt="${day.conditions}" /> ${day.conditions}`),
+            buildRow(`<img src="${day.icon_url.replace('.gif', '.png')}" alt="${day.conditions}" /> ${day.conditions.replaceAll('/', '/<wbr>')}`),
             buildRow(`<span class="weather-temp">${day.high.fahrenheit}</span>`),
             buildRow(`<span class="weather-humidity">${day.avehumidity}</span>`),
             buildRow(`<span class="weather-chance-of-rain">${day.pop}</span>`),
@@ -103,7 +110,7 @@ export default async function decorate(block) {
   } else {
     try {
       // fetch weather
-      const resp = await fetch(`${weatherPrefix}/weather.json/r011`);
+      const resp = await fetch(`${weatherPrefix}/weather.json/${tournament}`);
       if (resp.ok) {
         const { current_observation: weatherData } = await resp.json();
         // setup title
@@ -121,7 +128,7 @@ export default async function decorate(block) {
         let condition = weatherData.weather.toLowerCase();
         if (condition.includes('cloud')) {
           condition = 'cloudy';
-        } else if (condition.includes('shower')) {
+        } else if (condition.includes('shower') || condition.includes('rain')) {
           condition = 'rain';
         } else if (condition.includes('thunder') || condition.includes('storm')) {
           condition = 'thunderstorm';

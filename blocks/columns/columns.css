@@ -61,14 +61,33 @@ main .columns > div > div.columns-contains-image {
   }
 }
 
-main .columns > div > div.columns-contains-image p {
-  margin: 0;
-}
-
 main .columns h2 {
   margin-top: 0;
   font-size: var(--heading-font-size-m);
   text-transform: uppercase;
+}
+
+main .columns .columns-column-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 16px;
+}
+
+main .columns .columns-column-title h2,
+main .columns .columns-column-title h2 + p {
+  margin: 0;
+}
+
+main .columns .columns-column-title h2 + p strong {
+  font-size: var(--heading-font-size-m);
+  font-weight: normal;
+  text-transform: uppercase;
+}
+
+main .columns > div > div.columns-contains-image p {
+  margin: 0;
 }
 
 main .columns picture {

@@ -1,4 +1,10 @@
 footer {
+  --footer-color: var(--color-blue);
+  --footer-text-color: var(--color-white);
+  --footer-ribbon-color: var(--color-white);
+  --footer-ribbon-text-color: var(--color-blue);
+  --footer-border-color: var(--color-gray-light);
+
   font-size: var(--body-font-size-xs);
   text-align: center;
 }
@@ -11,8 +17,8 @@ footer {
 
 footer .footer {
   padding: 20px;
-  background-color: var(--color-blue);
-  color: var(--color-white);
+  background-color: var(--footer-color);
+  color: var(--footer-text-color);
 }
 
 footer .footer > div > div {
@@ -24,11 +30,11 @@ footer .footer > div > div {
 footer .footer h2,
 footer .footer h3,
 footer .footer h4 {
-  color: var(--color-white);
+  color: var(--footer-text-color);
 }
 
 footer .footer a {
-  color: var(--color-white);
+  color: var(--footer-text-color);
   text-transform: uppercase;
   cursor: pointer;
 }
@@ -51,18 +57,18 @@ footer .footer ul {
 /* ribbon */
 footer .footer.footer-ribbon {
   padding: 0 20px;
-  background-color: var(--color-white);
-  color: var(--color-blue);
+  background-color: var(--footer-ribbon-color);
+  color: var(--footer-ribbon-text-color);
 }
 
 footer .footer.footer-ribbon h2,
 footer .footer.footer-ribbon h3,
 footer .footer.footer-ribbon h4 {
-  color: var(--color-blue);
+  color: var(--footer-ribbon-text-color);
 }
 
 footer .footer.footer-ribbon a {
-  color: var(--color-blue);
+  color: var(--footer-ribbon-text-color);
 }
 
 /* partners */
@@ -83,7 +89,7 @@ footer .footer .footer-partners img {
   }
 
   footer .footer .footer-partners .footer-partner:not(:first-child) {
-    border-left: 1px solid var(--color-gray-light);
+    border-left: 1px solid var(--footer-border-color);
   }
 }
 
@@ -96,7 +102,7 @@ footer .footer .footer-partners img {
 
 /* nav */
 footer .footer .footer-nav {
-  border-top: 1px solid var(--color-gray-light);
+  border-top: 1px solid var(--footer-border-color);
 }
 
 footer .footer .footer-nav ul {
@@ -221,7 +227,7 @@ footer .footer .footer-copyright {
 
 footer .footer #ot-sdk-btn.ot-sdk-show-settings, footer .footer #ot-sdk-btn.optanon-show-settings,
 footer .footer #ot-sdk-btn.ot-sdk-show-settings:hover, footer .footer #ot-sdk-btn.optanon-show-settings:hover {
-  color: var(--color-white);
+  color: var(--footer-text-color);
   text-transform: uppercase;
   cursor: pointer;
   font-size: unset;

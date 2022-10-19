@@ -163,14 +163,20 @@ export function decorateIcons(element) {
  * @param {Element} main The container element
  */
 export function makeLinksRelative(main) {
+  // eslint-disable-next-line no-use-before-define
+  const hosts = ['hlx.page', 'hlx.live', ...PRODUCTION_DOMAINS];
   main.querySelectorAll('a').forEach((a) => {
-    // eslint-disable-next-line no-use-before-define
-    const hosts = ['hlx.page', 'hlx.live', ...PRODUCTION_DOMAINS];
     if (a.href) {
       try {
         const url = new URL(a.href);
-        const relative = hosts.some((host) => url.hostname.includes(host));
-        if (relative) a.href = `${url.pathname.replace('.html', '')}${url.search}${url.hash}`;
+        const hostMatch = hosts.some((host) => url.hostname.includes(host));
+        const hostPathMatch = hosts.find((host) => `${url.hostname}${url.pathname}`.includes(host));
+        if (hostMatch) {
+          a.href = `${url.pathname.replace('.html', '')}${url.search}${url.hash}`;
+        } else if (hostPathMatch) {
+          const resultHref = `${url.hostname}${url.pathname}${url.search}${url.hash}`.replace(hostPathMatch, '').replace('.html', '');
+          a.href = resultHref.startsWith('/') ? resultHref : `/${resultHref}`;
+        }
       } catch (e) {
         // something went wrong
         // eslint-disable-next-line no-console
@@ -914,6 +920,28 @@ export async function decorateMain(main) {
       const picture = createOptimizedPicture(bg);
       picture.classList.add('section-background');
       section.prepend(picture);
+
+      const videoId = section.dataset.video;
+      if (videoId) {
+        const playLink = document.createElement('a');
+
+        const videoFeedUrl = `https://www.pgatour.com/bin/data/feeds/video-details.json/videoIds=${videoId}`;
+        fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(videoFeedUrl)}`).then(async (resp) => {
+          if (resp.ok) {
+            const json = await resp.json();
+            if (json.length > 0) {
+              playLink.href = json[0].link;
+              section.insertBefore(playLink, picture.nextSibling);
+            }
+          }
+        });
+        playLink.target = '_blank';
+
+        const playIcon = document.createElement('span');
+
+        playIcon.classList.add('teaser-play');
+        playLink.append(playIcon);
+      }
     }
   });
 
@@ -921,15 +949,25 @@ export async function decorateMain(main) {
 }
 
 /**
+ * checks is search param 'view' is set to 'app'
+ */
+
+function isAppView() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('view') === 'app';
+}
+
+/**
  * loads everything needed to get to LCP.
  */
 async function loadEager(doc) {
   decorateTemplateAndTheme();
+  if (isAppView()) document.querySelector('header').remove();
   const main = doc.querySelector('main');
   if (main) {
     await decorateMain(main);
     await waitForLCP();
-    loadHeader(doc.querySelector('header'));
+    if (!isAppView()) loadHeader(doc.querySelector('header'));
   }
 }
 
@@ -944,14 +982,14 @@ async function loadLazy(doc) {
   const element = hash ? main.querySelector(hash) : false;
   if (hash && element) element.scrollIntoView();
 
-  loadFooter(doc.querySelector('footer'));
+  if (!isAppView()) loadFooter(doc.querySelector('footer'));
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   addFavIcon(`${window.hlx.codeBasePath}/styles/favicon.ico`);
 
-  loadAds(doc);
+  if (!isAppView()) loadAds(doc);
 
-  doc.querySelectorAll('div:not([class]):empty').forEach((empty) => empty.remove());
+  doc.querySelectorAll('div:not([class]):not([id]):empty').forEach((empty) => empty.remove());
 }
 
 /**
@@ -960,7 +998,7 @@ async function loadLazy(doc) {
  */
 function loadDelayed() {
   // eslint-disable-next-line import/no-cycle
-  window.setTimeout(() => import('./delayed.js'), 3000);
+  window.setTimeout(() => import('./delayed.js'), 4000);
   // load anything that can be postponed to the latest here
 }
 
@@ -979,4 +1017,28 @@ export async function lookupPages(pathnames) {
     return (result);
   }
   return window.pageIndex.data;
+}
+
+/**
+ * Add dynamic font sizing CSS class names to headings
+ *
+ * The CSS class names are determined by character counts.
+ * @param {Element} block The container element
+ * @param {string} classPrefix Prefix in CSS class names before "-long", "-very-long", "-x-long".
+ * Default is "heading".
+ * @param {string} selector CSS selector to select the target heading tags. Default is "h1, h2".
+ */
+export function addHeaderSizing(block, classPrefix = 'heading', selector = 'h1, h2') {
+  const headings = block.querySelectorAll(selector);
+  const sizes = [
+    { name: 'long', threshold: 30 },
+    { name: 'very-long', threshold: 40 },
+    { name: 'x-long', threshold: 50 },
+  ];
+  headings.forEach((h) => {
+    const { length } = h.textContent;
+    sizes.forEach((size) => {
+      if (length >= size.threshold) h.classList.add(`${classPrefix}-${size.name}`);
+    });
+  });
 }

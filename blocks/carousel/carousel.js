@@ -1,4 +1,4 @@
-import { toClassName, readBlockConfig } from '../../scripts/scripts.js';
+import { toClassName, readBlockConfig, fetchPlaceholders } from '../../scripts/scripts.js';
 
 async function insertGallerySlides(block) {
   const damPrefix = 'https://www.pgatour.com';
@@ -38,20 +38,22 @@ async function insertCourseFeedSlides(block) {
   const damPrefix = 'https://www.pgatour.com/pgatour/courses';
   const cloudinaryPrefix = 'https://pga-tour-res.cloudinary.com/image/upload/f_auto,q_auto';
   const config = readBlockConfig(block);
+  const placeholders = await fetchPlaceholders();
   block.innerHTML = '';
 
-  const resp = await fetch('https://statdata.pgatour.com/r/011/coursestat.json');
+  const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(`https://statdata.pgatour.com/${placeholders.tourCode}/${placeholders.tournamentId}/coursestat.json`)}`);
   const json = await resp.json();
   if (json && json.courses && json.courses[0].holes) {
     const code = json.tourCode;
     const perm = json.permNum;
+    const { courseId } = json.courses[0];
     // eslint-disable-next-line no-restricted-syntax
     for (const hole of json.courses[0].holes) {
-      const damSrc = `${damPrefix}/${code}${perm}/${perm}/holes/hole${hole.holeNum}.jpg`;
-      const holeJpg = `${cloudinaryPrefix},w_1290/v1/pgatour/courses/${code}${perm}/${perm}/holes/hole${hole.holeNum}.jpg`;
-      const holePng = `${cloudinaryPrefix},w_150/holes_${config.year}_${code}_${perm}_${perm}_overhead_full_${hole.holeNum}.png`;
+      const damSrc = `${damPrefix}/${code}${perm}/${courseId}/holes/hole${hole.holeNum}.jpg`;
+      const holeJpg = `${cloudinaryPrefix},w_1290/v1/pgatour/courses/${code}${perm}/${courseId}/holes/hole${hole.holeNum}.jpg`;
+      const holePng = `${cloudinaryPrefix},w_150/holes_${config.year || new Date().getFullYear()}_${code}_${perm}_${courseId}_overhead_full_${hole.holeNum}.png`;
       // eslint-disable-next-line no-await-in-loop
-      const metaresp = await fetch(`${damSrc}/jcr:content/metadata.json`);
+      const metaresp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(`${damSrc}/jcr:content/metadata.json`)}`);
       // eslint-disable-next-line no-await-in-loop
       const meta = await metaresp.json();
       const metaDesc = meta['dc:description'];
@@ -81,7 +83,9 @@ async function insertCourseFeedSlides(block) {
         <div class="carousel-text course-text">
           <div class="course-overview">
             <h2>Hole #${hole.holeNum}</h2>
-            <h3>PAR ${hole.par}, ${hole.yards} Yards</h3>
+            <div class="course-heading-wrapper">
+              <h3>PAR ${hole.par}, ${hole.yards} Yards</h3>
+            </div>
             <p class="course-hole">
               <picture>
                 <img src="${holePng}" alt="${metaTitle}" />
@@ -90,7 +94,7 @@ async function insertCourseFeedSlides(block) {
             <p>${metaDesc}</p>
           </div>
             <div class="course-statistics">
-              <h3 id="statistics">${config.year} Statistics</h3>
+              <h3 id="statistics">${config.year || new Date().getFullYear()} Statistics</h3>
               <div class="course-avg">
                   <p>${avg} <strong>SCORING AVG</strong>
                   </p>
@@ -170,6 +174,18 @@ export default async function decorate(block) {
         classes.forEach((e, j) => {
           if (row.children[j]) row.children[j].classList.add(`carousel-${e}`);
         });
+        const carouselText = row.querySelector('.carousel-text');
+        if (carouselText) {
+          const readMoreBtn = carouselText.querySelector('a[title="Read More"], a[title="READ MORE"]');
+          // pull 'read more' button out of button container
+          if (readMoreBtn) {
+            readMoreBtn.classList.add('read-more');
+            const btnContainer = readMoreBtn.closest('.button-container');
+            btnContainer.parentElement.insertBefore(readMoreBtn, btnContainer);
+            // if 'read more' is only button, remove button container
+            if (!btnContainer.hasChildNodes()) btnContainer.remove();
+          }
+        }
         /* course carousel */
         if (blockClasses.includes('course')) {
           const text = row.querySelector('.carousel-text');
@@ -177,58 +193,86 @@ export default async function decorate(block) {
           // setup overview (title, img, desc)
           const overview = document.createElement('div');
           overview.classList.add('course-overview');
-          overview.append(
-            text.querySelector('h2'), // title
-            text.querySelector('h2 + h3'), // par heading
-            text.querySelector('h2 + h3 + p'), // course img
-            text.querySelector('h2 + h3 + p + p'), // course desc
-          );
-          const holeImg = overview.querySelector('picture');
-          if (holeImg) holeImg.parentNode.classList.add('course-hole');
-          // setup stats
-          const statistics = document.createElement('div');
-          statistics.classList.add('course-statistics');
-          statistics.append(
-            text.querySelector('h3'), // statistics heading
-            text.querySelector('h3 + ul'), // statistics list
-          );
-          const statsTable = document.createElement('table');
-          const allStats = statistics.querySelector('ul');
-          let stats = [];
-          if (allStats) stats = allStats.querySelectorAll('li');
-          stats.forEach((s) => {
-            const stat = s.querySelector('strong').textContent;
-            // setup scoring average ring
-            if (stat.toUpperCase() === 'SCORING AVG') {
-              const avg = document.createElement('div');
-              avg.classList.add('course-avg');
-              avg.innerHTML = `<p>${s.innerHTML}</p>`;
-              allStats.parentNode.insertBefore(avg, allStats);
-              s.remove();
-            } else {
-              const tableRow = document.createElement('tr');
-              tableRow.classList.add(`course-${toClassName(stat)}`);
-              const val = parseInt(s.textContent.split(' ')[s.textContent.split(' ').length - 1], 10);
 
-              const bar = document.createElement('td');
-              bar.classList.add('course-stat-graph');
-              bar.innerHTML = `<div class="course-stat-bar" style="width: ${val}%"></div>`;
+          const title = text.querySelector('h2'); // hole #
+          const headings = text.querySelectorAll('h3'); // hole name and par
+          const paragraphs = text.querySelectorAll('p'); // course img, hole description, photo credit
 
-              const percent = document.createElement('td');
-              percent.classList.add('course-stat-percent');
-              percent.innerHTML = `${val}%`;
+          overview.append(title);
+          const headingWrapper = document.createElement('div');
+          headingWrapper.classList.add('course-heading-wrapper');
+          headings.forEach((h) => {
+            headingWrapper.append(h);
+          });
+          overview.append(headingWrapper);
 
-              const thisStat = document.createElement('td');
-              thisStat.classList.add('course-stat-title');
-              thisStat.innerHTML = s.querySelector('strong').textContent;
-
-              tableRow.append(bar, percent, thisStat);
-              statsTable.append(tableRow);
+          paragraphs.forEach((p, idx) => {
+            // append all but the last one which is the photo creidt
+            if ((idx + 1) < paragraphs.length) {
+              overview.append(p);
             }
           });
-          if (allStats && statsTable) allStats.replaceWith(statsTable);
 
-          text.prepend(overview, statistics);
+          const holeImg = overview.querySelector('picture');
+          if (holeImg) {
+            holeImg.parentNode.classList.add('course-hole');
+          } else {
+            const courseHolePlaceholder = document.createElement('p');
+            courseHolePlaceholder.classList.add('course-hole');
+            overview.insertBefore(courseHolePlaceholder, headingWrapper.nextSibling);
+          }
+          // setup stats
+          const statsHeading = text.querySelector('h3');
+          if (statsHeading) {
+            const statistics = document.createElement('div');
+            statistics.classList.add('course-statistics');
+            statistics.append(
+              statsHeading, // statistics heading
+              text.querySelector('h3 + ul'), // statistics list
+            );
+
+            const statsTable = document.createElement('table');
+            const allStats = statistics.querySelector('ul');
+            let stats = [];
+            if (allStats) stats = allStats.querySelectorAll('li');
+            stats.forEach((s) => {
+              const stat = s.querySelector('strong').textContent;
+              // setup scoring average ring
+              if (stat.toUpperCase() === 'SCORING AVG') {
+                const avg = document.createElement('div');
+                avg.classList.add('course-avg');
+                avg.innerHTML = `<p>${s.innerHTML}</p>`;
+                allStats.parentNode.insertBefore(avg, allStats);
+                s.remove();
+              } else {
+                const tableRow = document.createElement('tr');
+                tableRow.classList.add(`course-${toClassName(stat)}`);
+                const val = parseInt(s.textContent.split(' ')[s.textContent.split(' ').length - 1], 10);
+
+                const bar = document.createElement('td');
+                bar.classList.add('course-stat-graph');
+                bar.innerHTML = `<div class="course-stat-bar" style="width: ${val}%"></div>`;
+
+                const percent = document.createElement('td');
+                percent.classList.add('course-stat-percent');
+                percent.innerHTML = `${val}%`;
+
+                const thisStat = document.createElement('td');
+                thisStat.classList.add('course-stat-title');
+                thisStat.innerHTML = s.querySelector('strong').textContent;
+
+                tableRow.append(bar, percent, thisStat);
+                statsTable.append(tableRow);
+              }
+            });
+
+            if (allStats && statsTable) allStats.replaceWith(statsTable);
+
+            text.prepend(overview, statistics);
+          } else {
+            text.prepend(overview);
+          }
+
           // setup photo credits
           const credits = text.querySelector('p > em');
           if (credits) credits.parentNode.classList.add('course-credits');

@@ -1,4 +1,4 @@
-import { decorateIcons, readBlockConfig } from '../../scripts/scripts.js';
+import { decorateIcons, fetchPlaceholders, readBlockConfig } from '../../scripts/scripts.js';
 
 function toggleView(e) {
   const button = e.target.closest('button');
@@ -22,9 +22,10 @@ function toggleView(e) {
 export default async function decorate(block) {
   const config = readBlockConfig(block);
   block.textContent = '';
+  const placeholders = await fetchPlaceholders();
 
   const year = config.year || new Date().getFullYear();
-  const feedURL = `https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=011&YEAR=${year}&format=json`;
+  const feedURL = `https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=${placeholders.tourCode}&T_NUM=${placeholders.tournamentId}&YEAR=${year}&format=json`;
 
   // setup controls
   const controls = document.createElement('div');

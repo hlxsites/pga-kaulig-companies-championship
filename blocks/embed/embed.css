@@ -42,3 +42,15 @@ main .embed .embed-instagram-wrapper iframe {
   border: 1px solid #dbdbdb;
   border-radius: 3px;
 }
+
+/* youtube and facebook */
+main .embed .embed-youtube-wrapper iframe,
+main .embed .embed-facebook-wrapper iframe {
+  max-width: 560px;
+  max-height: 315px;
+}
+
+/* spotify */
+main .embed .embed-spotify-wrapper iframe {
+  max-width: calc(1290px / 2);
+}

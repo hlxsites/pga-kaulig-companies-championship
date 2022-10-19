@@ -1,11 +1,13 @@
 main .tee-times {
-  color: var(--color-blue);
+  --tee-times-text-color: var(--color-blue);
+
+  color: var(--tee-times-text-color);
   text-align: center;
 }
 
 main .tee-times h3 {
   margin-top: 0;
-  color: var(--color-blue);
+  color: var(--tee-times-text-color);
 }
 
 main .tee-times h4 {

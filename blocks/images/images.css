@@ -9,6 +9,11 @@ main .images figure figcaption {
   text-align: center;
 }
 
+main .images.small img {
+  width: 100%;
+  max-width: 330px;
+}
+
 main .images .images-columns {
   display: flex;
   flex-direction: column;

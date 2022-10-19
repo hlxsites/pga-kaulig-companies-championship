@@ -1,4 +1,6 @@
 main .share {
+  --share-btn-default-color: var(--color-blue);
+
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -22,7 +24,7 @@ main .share .button {
   margin: 0;
   border-radius: 50%;
   padding: 0;
-  background-color: var(--color-blue);
+  background-color: var(--share-btn-default-color);
 }
 
 main .share .button:not(:last-of-type) {

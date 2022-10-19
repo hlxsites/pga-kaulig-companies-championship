@@ -2,6 +2,8 @@ Please always provide the [GitHub issue(s)](../issues) your PR is for, as well a
 
 Fix #<gh-issue-id>
 
+Please update the [block inventory](https://adobe.sharepoint.com/:w:/r/sites/HelixProjects/_layouts/15/Doc.aspx?sourcedoc=%7B3DCA0821-E21F-4AFE-94E6-6EA820D45D96%7D&file=block-inventory.docx&action=default&mobileredirect=true) with any relevant block changes as a result of this PR.
+
 Test URLs:
-- Before: https://main--<repo>--<owner>.hlx.page/
-- After: https://<branch>--<repo>--<owner>.hlx.page/
+- Before: https://main--theplayers--hlxsites.hlx.page/
+- After: https://<branch>--theplayers--hlxsites.hlx.page/

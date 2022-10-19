@@ -7,7 +7,8 @@ function convertTime(serial) {
   const seconds = totalSeconds % 60;
   totalSeconds -= seconds;
 
-  const hours = Math.floor(totalSeconds / (60 * 60));
+  let hours = Math.floor(totalSeconds / (60 * 60));
+  if (hours === 0) hours = 12;
   const minutes = (Math.floor(totalSeconds / 60) % 60).toString().padStart(2, '0');
 
   return { hours, minutes };
