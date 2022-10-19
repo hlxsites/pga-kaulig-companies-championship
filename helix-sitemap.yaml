@@ -2,7 +2,7 @@ version: 1
 
 sitemaps:
   website:
-    origin: https://www.theplayers.com
+    origin: https://www.kauligchampionship.com
     lastmod: YYYY-MM-DD
     languages:
       default:
