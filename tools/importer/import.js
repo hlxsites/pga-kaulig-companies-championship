@@ -17,9 +17,9 @@ const reorganiseHero = (main, document) => {
     heroLegend.remove();
   }
 
-  const hero = document.querySelector('.main-image');
-  if (hero) {
-    main.prepend(hero);
+  const mainImage = document.querySelector('.main-image');
+  if (mainImage) {
+    main.prepend(mainImage);
   }
 
   const video = document.querySelector('.hero-module .video-container');

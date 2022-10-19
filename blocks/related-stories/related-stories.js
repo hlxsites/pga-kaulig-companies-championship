@@ -9,6 +9,21 @@ export default async function decorate(block) {
   const limit = config.limit || 5;
   block.innerHTML = '';
 
+  const title = document.createElement('h3');
+  title.textContent = 'Related to this story';
+  block.append(title);
+
+  // set placeholder content
+  const ul = document.createElement('ul');
+  block.append(ul);
+  for (let i = 0; i < limit; i += 1) {
+    const placeholder = document.createElement('li');
+    placeholder.className = 'related-stories-placeholder';
+    placeholder.innerHTML = `<a><div class="related-stories-story-image"></div>
+      <div class="related-stories-story-body"></div></a>`;
+    ul.append(placeholder);
+  }
+
   const observer = new IntersectionObserver(async (entries) => {
     if (entries.some((entry) => entry.isIntersecting)) {
       observer.disconnect();
@@ -18,10 +33,7 @@ export default async function decorate(block) {
         const directURL = `${storiesURL}/path=/content&tags=${config.tags.replace(/ /g, '')}&relatedTo=/content/the-players${window.location.pathname}&size=${limit}`;
         const resp = await fetch(`https://little-forest-58aa.david8603.workers.dev/?url=${encodeURIComponent(directURL)}`);
         const json = await resp.json();
-        const title = document.createElement('h3');
-        title.textContent = 'Related to this story';
-        const ul = document.createElement('ul');
-        json.items.forEach((story) => {
+        json.items.forEach((story, i) => {
           const prefix = story.image.startsWith('brightcove') ? videoPrefix : damPrefix;
           const li = document.createElement('li');
           li.classList.add('related-stories-story', `related-stories-story-${story.type}`);
@@ -38,9 +50,8 @@ export default async function decorate(block) {
             </div>
           `;
           li.append(a);
-          ul.append(li);
+          [...ul.children][i].replaceWith(li);
         });
-        block.append(title, ul);
       }
       makeLinksRelative(block);
       updateExternalLinks(block);

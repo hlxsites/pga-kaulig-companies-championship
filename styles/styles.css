@@ -493,6 +493,82 @@ main .section.teaser picture.section-background img {
   }
 }
 
+/* two col layout */
+main .section.two-col[data-section-status='loaded'] {
+  box-sizing: border-box;
+  display: grid;
+  max-width: 1290px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 16px;
+}
+
+main .section.two-col > .col-right {
+  order: 2;
+}
+
+/* stylelint-disable-next-line no-descending-specificity */
+main .section.two-col > :not(.col-right) {
+  order: 1;
+}
+
+@media (min-width: 900px) {
+  main .section.two-col {
+    grid-template-columns: calc(100% - 300px - 32px) 300px;
+    gap: 0 32px;
+  }
+
+  main .section.two-col > * {
+    grid-column: 1;
+    width: 100%;
+  }
+
+  main .section.two-col > .col-right {
+    grid-column: 2;
+    grid-row: 1 / span 99;
+    width: 300px;
+  }
+}
+
+@media (min-width: 1322px) {
+  main .section.two-col {
+    padding: 0;
+  }
+}
+
+/* ads */
+main .ads-container, main .ads {
+  display: none;
+  visibility: hidden;
+}
+
+main .ad {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 32px 0;
+}
+
+main .ad .ad-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+}
+
+@media (min-width: 728px) {
+  main .ad .ad-top {
+    height: 90px;
+  }
+}
+
+@media (min-width: 970px) {
+  main .ad .ad-top {
+    height: 250px;
+  }
+}
+
 main .section.teaser .teaser-play {
   box-sizing: border-box;
   display: block;

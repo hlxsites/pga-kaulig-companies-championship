@@ -349,6 +349,7 @@ export function decorateSections(main) {
     const wrappers = [];
     let defaultContent = false;
     [...section.children].forEach((e) => {
+      if ([...e.classList].includes('col-right')) return;
       if (e.tagName === 'DIV' || !defaultContent) {
         const wrapper = document.createElement('div');
         wrappers.push(wrapper);
@@ -380,7 +381,7 @@ export function decorateSections(main) {
  * @param {Element} main The container element
  */
 export function updateSectionsStatus(main) {
-  const sections = [...main.querySelectorAll(':scope > div.section')];
+  const sections = [...main.querySelectorAll(':scope > .section')];
   for (let i = 0; i < sections.length; i += 1) {
     const section = sections[i];
     const status = section.getAttribute('data-section-status');
@@ -765,10 +766,15 @@ function buildHeroBlock(main) {
 }
 
 function buildShareBlock(main) {
-  const firstSection = main.querySelector('div');
   const section = document.createElement('div');
   section.append(buildBlock('share', ''));
-  firstSection.after(section);
+  const ad = main.querySelector('.ad-top');
+  const hero = main.querySelector('.hero, .carousel');
+  if (ad) {
+    ad.parentNode.after(section);
+  } else if (hero) {
+    hero.parentNode.after(section);
+  }
 }
 
 function buildRelatedStoriesBlock(main, tags) {
@@ -782,9 +788,14 @@ function buildRelatedStoriesBlock(main, tags) {
     storiesSection = document.createElement('div');
     main.append(storiesSection);
   } else {
-    storiesSection.classList.add('related-stories-cols');
+    storiesSection.classList.add('two-col');
   }
-  storiesSection.append(buildBlock('related-stories', [['<div>Tags</div>', `<div>${tags}</div>`]]));
+  const block = buildBlock('related-stories', [['<div>Tags</div>', `<div>${tags}</div>`]]);
+  const wrapper = document.createElement('section');
+  wrapper.className = 'col-right';
+  wrapper.append(block);
+  decorateBlock(block);
+  storiesSection.append(wrapper);
 }
 
 export function linkPicture(picture) {
@@ -822,52 +833,25 @@ async function loadFooter(footer) {
   await loadBlock(footerBlock);
 }
 
-async function loadAds(doc) {
-  window.ads = window.ads || {};
-  // fetch ads
-  const { loaded } = window.ads;
-  if (!loaded) {
-    window.ads.loaded = new Promise((resolve, reject) => {
-      try {
-        fetch('/ads.json')
-          .then((resp) => resp.json())
-          .then((json) => {
-            const ads = [];
-            json.data.forEach((ad) => {
-              ads.push({
-                URL: ad.URL,
-                positions: ad.Position,
-              });
-            });
-            window.ads.locations = ads;
-            resolve();
-          });
-      } catch (e) {
-        // error loading placeholders
-        window.ads.locations = [];
-        reject();
-      }
-    });
+export function loadScript(url, callback, type) {
+  const head = document.querySelector('head');
+  if (!head.querySelector(`script[src="${url}"]`)) {
+    const script = document.createElement('script');
+    script.src = url;
+    if (type) script.setAttribute('type', type);
+    head.append(script);
+    script.onload = callback;
+    return script;
   }
-  await window.ads.loaded;
-  // find if add on page
-  const { pathname } = window.location;
-  const adOnPage = window.ads.locations.find((ad) => {
-    if (ad.URL.includes('**')) { // wildcard selector
-      const folder = ad.URL.replace('**', '');
-      return pathname.startsWith(folder);
-    }
-    return ad.URL === pathname;
-  });
-  if (adOnPage) {
-    // build ad block
-    const adContainer = document.createElement('div');
-    const block = buildBlock('ads', [['<div>Position</div>', `<div>${adOnPage.positions}</div>`]]);
-    adContainer.append(block);
-    decorateBlock(block);
-    loadBlock(block);
-    doc.querySelector('main').append(block);
-  }
+  return head.querySelector(`script[src="${url}"]`);
+}
+
+/**
+ * checks is search param 'view' is set to 'app'
+ */
+function isAppView() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('view') === 'app';
 }
 
 /**
@@ -878,6 +862,31 @@ async function buildAutoBlocks(main) {
   try {
     buildHeroBlock(main);
     buildImageBlocks(main);
+
+    const hasAd = getMetadata('ad');
+    if (hasAd && !isAppView()) {
+      const positions = hasAd.split(',').map((a) => a.trim().toLowerCase());
+      let validPositions = false;
+      positions.forEach((position) => {
+        if (position === 'top') {
+          validPositions = true;
+          const adPlaceholder = document.createElement('aside');
+          adPlaceholder.setAttribute('data-section-status', 'loading');
+          adPlaceholder.className = 'section ad';
+          adPlaceholder.innerHTML = '<div id="pb-slot-top" class="ad-top"></div>';
+          const hero = main.querySelector('.hero, .carousel');
+          if (hero) hero.parentNode.after(adPlaceholder);
+        } else if (position === 'bottom') {
+          validPositions = true;
+          const adPlaceholder = document.createElement('aside');
+          adPlaceholder.className = 'section ad';
+          adPlaceholder.innerHTML = '<div id="pb-slot-bottom" class="ad-bottom"></div>';
+          main.append(adPlaceholder);
+        }
+      });
+      if (validPositions) main.append(buildBlock('ads', ''));
+    }
+
     const template = getMetadata('template');
     if (template === 'left-align' || template === 'past-champions') {
       buildShareBlock(main);
@@ -949,15 +958,6 @@ export async function decorateMain(main) {
 }
 
 /**
- * checks is search param 'view' is set to 'app'
- */
-
-function isAppView() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('view') === 'app';
-}
-
-/**
  * loads everything needed to get to LCP.
  */
 async function loadEager(doc) {
@@ -986,8 +986,6 @@ async function loadLazy(doc) {
 
   loadCSS(`${window.hlx.codeBasePath}/styles/lazy-styles.css`);
   addFavIcon(`${window.hlx.codeBasePath}/styles/favicon.ico`);
-
-  if (!isAppView()) loadAds(doc);
 
   doc.querySelectorAll('div:not([class]):not([id]):empty').forEach((empty) => empty.remove());
 }
