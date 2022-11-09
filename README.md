@@ -3,6 +3,7 @@
 ## Environments
 - Preview: https://main--pga-kaulig-companies-championship--hlxsites.hlx.page/
 - Live: https://main--pga-kaulig-companies-championship--hlxsites.hlx.live/
+- Prod: https://www.kauligchampionship.com/
 
 ## Installation
 
