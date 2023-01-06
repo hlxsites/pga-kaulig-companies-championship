@@ -738,13 +738,8 @@ initHlx();
  */
 
 const LCP_BLOCKS = ['carousel', 'hero']; // add your LCP blocks to the list
-<<<<<<< HEAD
-const RUM_GENERATION = 'project-1'; // add your RUM generation information here
-const PRODUCTION_DOMAINS = ['www.kauligchampionship.com', 'www.pgatour.com/champions/tournaments/kaulig-companies-championship/'];
-=======
 const RUM_GENERATION = 'intercept-aa-2'; // add your RUM generation information here
-const PRODUCTION_DOMAINS = ['www.theplayers.com'];
->>>>>>> upstream/main
+const PRODUCTION_DOMAINS = ['www.kauligchampionship.com', 'www.pgatour.com/champions/tournaments/kaulig-companies-championship/'];
 
 sampleRUM('top');
 window.addEventListener('load', () => sampleRUM('load'));
