@@ -1,5 +1,5 @@
 footer {
-  --footer-color: var(--color-blue-darker);
+  --footer-color: var(--color-blue-muted);
   --footer-text-color: var(--color-white);
   --footer-ribbon-color: var(--color-white);
   --footer-ribbon-text-color: var(--color-blue-darker);
