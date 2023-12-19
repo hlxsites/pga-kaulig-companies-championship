@@ -127,6 +127,7 @@ async function getArticles(limit, placeholders) {
           }
       }
   }`, {
+      tour: placeholders.tourCode.toUpperCase(),
       tournamentNum: placeholders.tournamentId,
       limit,
     });
